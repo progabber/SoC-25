@@ -33,3 +33,13 @@ c. Running
 
 ## Question 3 - Memory
 
+For `memory1.c`:
+RSS: 864 KiB, VSZ: 8300 Kib
+
+For `memory2.c`:
+RSS: 3188 KiB, VSZ: 8300 Kib
+
+This is because in the first case, no array index is accessed. So the system does not allocate memory for the array. However, the second program accesses the elements. When the programs accesses a particular index, the system grants memory for it. Probably that is why about half the virtual memory allocated is used as physical memory (half the array is accessed).
+
+## Question 6
+
