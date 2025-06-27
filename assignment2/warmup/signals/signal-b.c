@@ -9,7 +9,10 @@ void handler(int sig){
 }
 
 int main(int argc, char *argv[]){
-	(void) signal(SIGINT, handler);
+	if (signal(SIGINT, handler) == SIG_ERR){
+		fprintf(stderr, "Error while receiving signal\n");
+		exit(EXIT_FAILURE);
+	}
 	while (1){
 		printf("I (process %d) am peacefully running, don't try to stop me\n", (int) getpid());
 		sleep(1);
