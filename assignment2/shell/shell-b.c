@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 		bzero(line, sizeof(line));
 		char cwd[MAX_CWD_LENGTH];
 		if (getcwd(cwd, MAX_CWD_LENGTH) == NULL){
-			cwd = "...";
+			strcpy(cwd, "...");
 		}
 		printf("%s $ ", cwd);
 		scanf("%[^\n]", line);
