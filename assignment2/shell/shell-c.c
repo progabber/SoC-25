@@ -84,6 +84,9 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+		// check if command empty
+		if (tokens[0] == NULL) continue;
+
 		// check if background command
 		int background_comm = 0;
 		int token_no = 0;
@@ -106,11 +109,9 @@ int main(int argc, char* argv[]) {
 			}
 			else if (cpid == 0){
 				// execute the command using execvp
-				if (tokens[0] != NULL){
-					if (execvp(tokens[0], tokens) < 0){
-						printf("Command invalid, please try again\n");
-						exit(EXIT_FAILURE);
-					}
+				if (execvp(tokens[0], tokens) < 0){
+					printf("Command invalid, please try again\n");
+					exit(EXIT_FAILURE);
 				}
 			}
 			else {

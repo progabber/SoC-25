@@ -11,9 +11,8 @@
 #define MAX_CWD_LENGTH 256
 #define MAX_BG_LENGTH 64
 
-/* Splits the string by space and returns the array of tokens
-*
-*/
+
+// Splits the string by space and returns the array of tokens
 char **tokenize(char *line)
 {
   char **tokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
@@ -46,8 +45,9 @@ int main(int argc, char* argv[]) {
 	char  line[MAX_INPUT_SIZE];            
 	char  **tokens;              
 	int i;
-	int background_pids[MAX_BG_LENGTH]; // end is signified by a 0
+	int background_pids[MAX_BG_LENGTH], pgids[MAX_BG_LENGTH]; // end is signified by a 0
 	background_pids[0] = 0;
+	pgids[0] = 0;
 
 
 	while(1) {			
@@ -67,8 +67,9 @@ int main(int argc, char* argv[]) {
 		// check for dead background processes
 		for (int i = 0; background_pids[i] != 0; i++) {
 			if (waitpid(background_pids[i], NULL, WNOHANG) == background_pids[i]) {
-				printf("Background process with PID: %d is now dead :)\n", background_pids[i]);
+				printf("Background process with PID: %d and PGID: %d is now dead :)\n", background_pids[i], pgids[i]);
 				background_pids[i] = -1; // space to be recovered after the for loop
+				pgids[i] = -1; // space to be recovered after the for loop
 			}
 		}
 
@@ -76,10 +77,14 @@ int main(int argc, char* argv[]) {
 		for (int i = 0, offset = 0; i < MAX_BG_LENGTH; i++) {
 			if (background_pids[i] == -1) offset++;
 			background_pids[i] = background_pids[i+offset];
+			pgids[i] = pgids[i+offset];
 			if (background_pids[i] == 0) {
 				break;
 			}
 		}
+
+		// check if command empty
+		if (tokens[0] == NULL) continue;
 
 		// check if background command
 		int background_comm = 0;
@@ -103,15 +108,15 @@ int main(int argc, char* argv[]) {
 			}
 			else if (cpid == 0){
 				// execute the command using execvp
-				if (tokens[0] != NULL){
-					if (execvp(tokens[0], tokens) < 0){
-						printf("Command invalid, please try again\n");
-						exit(EXIT_FAILURE);
-					}
+				if (execvp(tokens[0], tokens) < 0){
+					printf("Command invalid, please try again\n");
+					exit(EXIT_FAILURE);
 				}
 			}
 			else {
 				if (!background_comm){
+					int pgid = getpgid(cpid);
+					printf("PARENT GROUP ID: %d\nPID: %d\n", pgid, cpid);
 					// reap the child
 					int status;
 					waitpid(cpid, &status, 0);
@@ -123,9 +128,11 @@ int main(int argc, char* argv[]) {
 					}
 				}
 				else {
-					int i;
+					int i = 0;
+					setpgid(cpid, 0);
 					while (background_pids[i] != 0) i++;
 					background_pids[i] = cpid; background_pids[i+1] = 0;
+					pgids[i] = getpgid(cpid); pgids[i+1] = 0;
 				}
 			}
 		}
