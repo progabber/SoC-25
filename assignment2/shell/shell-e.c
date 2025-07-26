@@ -115,13 +115,6 @@ int main(int argc, char* argv[]) {
 				exit(EXIT_FAILURE);
 			}
 			else if (cpid == 0){
-				// execute the command using execvp
-				if (execvp(tokens[0], tokens) < 0){
-					printf("Command invalid, please try again\n");
-					exit(EXIT_FAILURE);
-				}
-			}
-			else {
 				if (!background_comm){
 					if (PGID_FOREGROUND_PROCS) {
 						setpgid(cpid, PGID_FOREGROUND_PROCS);
@@ -132,6 +125,15 @@ int main(int argc, char* argv[]) {
 					}
 					int pgid = getpgid(cpid);
 					printf("PARENT GROUP ID: %d\nPID: %d\n", pgid, cpid);
+				}
+				// execute the command using execvp
+				if (execvp(tokens[0], tokens) < 0){
+					printf("Command invalid, please try again\n");
+					exit(EXIT_FAILURE);
+				}
+			}
+			else {
+				if (!background_comm){
 					// reap the child
 					int status;
 					int is_group_leader = (cpid == PGID_FOREGROUND_PROCS ? 1 : 0);

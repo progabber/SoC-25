@@ -107,6 +107,10 @@ int main(int argc, char* argv[]) {
 				exit(EXIT_FAILURE);
 			}
 			else if (cpid == 0){
+				if (!background_comm){
+					int pgid = getpgid(cpid);
+					printf("PARENT GROUP ID: %d\nPID: %d\n", pgid, cpid);
+				}
 				// execute the command using execvp
 				if (execvp(tokens[0], tokens) < 0){
 					printf("Command invalid, please try again\n");
@@ -115,8 +119,6 @@ int main(int argc, char* argv[]) {
 			}
 			else {
 				if (!background_comm){
-					int pgid = getpgid(cpid);
-					printf("PARENT GROUP ID: %d\nPID: %d\n", pgid, cpid);
 					// reap the child
 					int status;
 					waitpid(cpid, &status, 0);
