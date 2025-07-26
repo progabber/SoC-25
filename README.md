@@ -13,4 +13,5 @@ Built a kernel from scratch <br>
 3. Read about user mode and kernel mode for privelege separation. 
 4. Wrote programs with individual system calls and then built a rudimentary shell by combining them. <br>
 #### Week 3 <br>
-Reading now, got to know about virtual memory in detail - address translation, paging, caching using TLB. <br>
+1. Got to know about virtual memory in detail - address translation, paging, caching using TLB. <br>
+2. Implemented a basic memory allocator (without a TLB) using multi-level paging. <br>
