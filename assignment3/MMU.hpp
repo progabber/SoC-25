@@ -15,6 +15,7 @@ struct MMU {
     Memory& memory;
     const Config& config;
     uint64_t translate(uint64_t vaddr, bool fillInEntries);
+    uint64_t cr3;
 };
 
 

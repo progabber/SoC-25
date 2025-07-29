@@ -59,7 +59,7 @@ uint64_t MMU::translate(uint64_t vaddr, bool fillInEntries) { // fillInEntries: 
 
 	// calculate physical frame for each piece (level) of vaddr
 	// and modify "paddr" accordingly
-	for (int i=0, shift = config.addressWidth; i<vaddr_pieces; i++) {
+	for (int i=0; i<vaddr_pieces; i++) {
 		shift -= config.bitsPerLevel[i];
 		try {	// try accessing the map to physical address
 			PageTableEntry PTE = memory.getPageTableEntry(i, broken_vaddr[i]);

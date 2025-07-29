@@ -12,7 +12,10 @@
   Otherwise, the user may initialise the variable later in the constructor body
   and we have got a dangling reference waiting to be assigned
 */
-MMU::MMU(Memory& memory, const Config& cfg) : memory(memory), config(cfg){}
+MMU::MMU(Memory& memory, const Config& cfg) : memory(memory), config(cfg){
+    cr3 = memory.nextAvailableFrame;
+    memory.nextAvailableFrame += cfg.pageSize;
+}
 
 void MMU::storeVal(uint64_t vaddr, uint64_t val) {
 	// store value "val" in the virtual address "vaddr"
@@ -55,30 +58,22 @@ uint64_t MMU::translate(uint64_t vaddr, bool fillInEntries) { // fillInEntries: 
 
 	// calculate physical frame for each piece (level) of vaddr
 	// and modify "paddr" accordingly
+    uint64_t current_physical_frame = cr3;
 	for (int i=0, shift = config.addressWidth; i<vaddr_pieces; i++) {
-		shift -= config.bitsPerLevel[i];
-		try {	// try accessing the map to physical address
-			PageTableEntry PTE = memory.getPageTableEntry(i, broken_vaddr[i]);
-			paddr |= (PTE.physicalFrame << shift);
-		}
-		catch(std::runtime_error &e) {
-			// std::cout << "For vaddr " << vaddr << ", we are in catch block \n";
-			if (!fillInEntries) throw std::runtime_error("No memory allotted");
-			// make new page
-			PageTableEntry new_page;
-			new_page.physicalFrame = memory.nextAvailableFrame;
-			new_page.present = true;
-			new_page.user = true;
-			new_page.write = true;
-
-			memory.nextAvailableFrame += config.pageSize;
-			// set the page table entry for this address
-			memory.setPageTableEntry(i, broken_vaddr[i], new_page);
-			paddr |= (new_page.physicalFrame << shift);
-		}
+        uint32_t offset_in_current_physical_frame = broken_vaddr[i];
+        uint32_t pte_location = current_physical_frame | offset_in_current_physical_frame;
+        if (memory.memory_contents.find(pte_location) 
+                == memory.memory_contents.end()) {
+            if (!fillInEntries) 
+                throw std::runtime_error("No memory allotted");
+            // otherwise make the mappings
+            memory.memory_contents[pte_location] = memory.nextAvailableFrame;
+            memory.nextAvailableFrame += config.pageSize;
+        }
+        current_physical_frame = memory.memory_contents.at(pte_location);
 	}
 	// add the offset
-	uint64_t offset = vaddr & (((uint64_t)1 << config.addressWidth) - 1);
-	paddr |= offset; // paddr is fully constructed!
-	return paddr;
+	uint32_t offset = vaddr & (config.pageSize - 1);
+	current_physical_frame |= offset; // paddr is fully constructed!
+	return current_physical_frame;
 }
