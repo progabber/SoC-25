@@ -15,3 +15,6 @@ Built a kernel from scratch <br>
 #### Week 3 <br>
 1. Got to know about virtual memory in detail - address translation, paging, caching using TLB. <br>
 2. Implemented a basic memory allocator (without a TLB) using multi-level paging. <br>
+#### Week 4 <br>
+1. Modified the keyboard driver to map keys on the keyboard by one to the right ( q -> w -> e ...) <br>
+2. Built a keylooger from the kernel which writes to (a) dmesg and (b) an external file <br>
